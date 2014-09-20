@@ -3,16 +3,21 @@
 #######################################
 
 SerialCommand KEYWORD1
+CommandHandler KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
 addCommand        KEYWORD2
-setDefaultHandler KEYWORD2
+addHandler        KEYWORD2
+setDefault        KEYWORD2
+
+setHandler        KEYWORD2
 readSerial        KEYWORD2
 clearBuffer       KEYWORD2
-next              KEYWORD2
+nextToken         KEYWORD2
+lastToken         KEYWORD2
 
 #######################################
 # Instances (KEYWORD2)

@@ -2,11 +2,12 @@
  * SerialCommand - A Wiring/Arduino library to tokenize and parse commands
  * received over a serial port.
  * 
+ * Copyright (C) 2014 Mark Pruden
  * Copyright (C) 2012 Stefan Rado
  * Copyright (C) 2011 Steven Cogswell <steven.cogswell@gmail.com>
  *                    http://husks.wordpress.com
  * 
- * Version 20120522
+ * Version 20140120
  * 
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -46,21 +47,22 @@ class SerialCommand;
 typedef void (*CommandCallbackSimple)();
 typedef void (*CommandCallback)(SerialCommand*);
 
+// The class that handles the processing of Commands
 class CommandHandler {
   public:
   
-    CommandHandler( SerialCommand& cmd );      // Constructor, must associate the SerialCommand 
+    CommandHandler( SerialCommand& cmd );  // Constructor, must associate the SerialCommand 
 
     void addCommand( const char *command, CommandCallbackSimple callback);  // Add a command to the list of commands to process.
     void addCommand( const char *command, CommandCallback callback);  // Add a command to the list of commands to process.
     void addHandler( const char *command, CommandHandler& handler );  // Add a sub command handler for a command.
     void setDefault( CommandCallback callback );   // A handler to call when no valid command received.
 
-	void handle (); // called by SerialCommand to process a command
+	void handle (); // called by SerialCommand to process a command, dont call this in your code.
 
   private:
 
-	SerialCommand& serialCmd; 	          // The SerialCommand from which tokens are read
+	SerialCommand& serialCmd; 	// The SerialCommand from which tokens are read
     CommandCallback defaultHandler;  // Pointer to the default handler function
 
     // Data structure to hold Command/Handler function key-value pairs
@@ -75,10 +77,11 @@ class CommandHandler {
     byte commandCount; // size of the above structure
 };
 
+// This is the main class that 
 class SerialCommand {
   public:
 
-    SerialCommand( );      // Constructor
+    SerialCommand( );      // Main Constructor
     
     void setHandler( CommandHandler& cmdHand );    // Sets the main handler
     
