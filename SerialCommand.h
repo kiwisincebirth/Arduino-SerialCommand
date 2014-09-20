@@ -34,42 +34,72 @@
 #include <string.h>
 
 // Size of the input buffer in bytes (maximum length of one command plus arguments)
-#define SERIALCOMMAND_BUFFER 32
+#define SERIALCOMMAND_BUFFER 48
+
 // Maximum length of a command excluding the terminating null
-#define SERIALCOMMAND_MAXCOMMANDLENGTH 8
+#define SERIALCOMMAND_MAXCOMMANDLENGTH 12
 
-// Uncomment the next line to run the library in debug mode (verbose messages)
-//#define SERIALCOMMAND_DEBUG
+//forward declarations
+class SerialCommand;
 
+// definitions of callback for handling commands
+typedef void (*CommandCallbackSimple)();
+typedef void (*CommandCallback)(SerialCommand*);
+
+class CommandHandler {
+  public:
+  
+    CommandHandler( SerialCommand& cmd );      // Constructor, must associate the SerialCommand 
+
+    void addCommand( const char *command, CommandCallbackSimple callback);  // Add a command to the list of commands to process.
+    void addCommand( const char *command, CommandCallback callback);  // Add a command to the list of commands to process.
+    void addHandler( const char *command, CommandHandler& handler );  // Add a sub command handler for a command.
+    void setDefault( CommandCallback callback );   // A handler to call when no valid command received.
+
+	void handle (); // called by SerialCommand to process a command
+
+  private:
+
+	SerialCommand& serialCmd; 	          // The SerialCommand from which tokens are read
+    CommandCallback defaultHandler;  // Pointer to the default handler function
+
+    // Data structure to hold Command/Handler function key-value pairs
+    struct SerialCommandCallback {
+      char command[SERIALCOMMAND_MAXCOMMANDLENGTH + 1];
+      CommandCallbackSimple function1;
+      CommandCallback function2;
+      CommandHandler *hand;
+    };  
+
+    SerialCommandCallback *commandList;   // Actual definition for command/handler array
+    byte commandCount; // size of the above structure
+};
 
 class SerialCommand {
   public:
-    SerialCommand();      // Constructor
-    void addCommand(const char *command, void(*function)());  // Add a command to the processing dictionary.
-    void setDefaultHandler(void (*function)(const char *));   // A handler to call when no valid command received.
 
-    void readSerial();    // Main entry point.
+    SerialCommand( );      // Constructor
+    
+    void setHandler( CommandHandler& cmdHand );    // Sets the main handler
+    
+    void readSerial();    // Main entry point, to read from serial and process.
+    
     void clearBuffer();   // Clears the input buffer.
-    char *next();         // Returns pointer to next token found in command buffer (for getting arguments to commands).
+	char* nextToken();    // parses and gets the next token from the input
+	char* lastToken();    // gets the last token read from the input
 
   private:
-    // Command/handler dictionary
-    struct SerialCommandCallback {
-      char command[SERIALCOMMAND_MAXCOMMANDLENGTH + 1];
-      void (*function)();
-    };                                    // Data structure to hold Command/Handler function key-value pairs
-    SerialCommandCallback *commandList;   // Actual definition for command/handler array
-    byte commandCount;
 
-    // Pointer to the default handler function
-    void (*defaultHandler)(const char *);
-
-    char delim[2]; // null-terminated list of character to be used as delimeters for tokenizing (default " ")
-    char term;     // Character that signals end of command (default '\n')
-
+	CommandHandler* cmdHandle;	// The default command Handler for processing the commands
+	
+    char term;          // Character that signals end of command (default '\n')
     char buffer[SERIALCOMMAND_BUFFER + 1]; // Buffer of stored characters while waiting for terminator character
-    byte bufPos;                        // Current position in the buffer
-    char *last;                         // State variable used by strtok_r during processing
+    byte bufPos;        // Current position in the buffer
+    
+    char delim[2]; 		// null-terminated list of character to be used as delimeters for tokenizing (default " ")
+    char *last;         // State variable used by strtok_r during processing
+    char *lastTok;      // returned from call to last token
+    boolean firsttoken; // denotes first call to string tokeniser.
 };
 
 #endif //SerialCommand_h
